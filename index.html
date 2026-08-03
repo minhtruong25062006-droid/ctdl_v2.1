@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#4f46e5">
+    <title>CTDL</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="nav-brand" tabindex="0" aria-label="Trang chủ CTDL"><i class="fas fa-layer-group" aria-hidden="true"></i> CTDL</div>
+        <div class="nav-tools">
+            <button id="btn-theme" class="ripple-effect icon-btn" title="Chuyển đổi giao diện" aria-label="Chuyển giao diện Sáng/Tối"><i class="fas fa-moon" aria-hidden="true"></i></button>
+            <button id="btn-fullscreen" class="ripple-effect icon-btn hide-mobile" title="Toàn màn hình" aria-label="Bật toàn màn hình"><i class="fas fa-expand" aria-hidden="true"></i></button>
+            <button id="btn-export" class="ripple-effect hidden" title="Xuất kết quả" aria-label="Xuất kết quả"><i class="fas fa-file-pdf" aria-hidden="true"></i> Xuất PDF</button>
+        </div>
+    </header>
+
+    <!-- Setup Screen -->
+    <main id="setup-screen" class="container">
+        <section class="setup-card fade-in">
+            <h1><i class="fas fa-rocket text-primary" aria-hidden="true"></i> Thiết lập bài luyện tập</h1>
+            <div class="form-group">
+                <label for="sel-chapter"><i class="fas fa-book" aria-hidden="true"></i> Chương:</label>
+                <select id="sel-chapter" aria-label="Chọn chương">
+                    <option value="all">Tất cả các chương</option>
+                    <option value="Danh sách đặc">Danh sách đặc</option>
+                    <option value="Danh sách liên kết">Danh sách liên kết</option>
+                    <option value="Stack Queue">Stack & Queue</option>
+                    <option value="Tree">Cây (Tree)</option>
+                    <option value="AVL/Bảng băm">AVL, Bảng băm & Biểu thức</option>
+                </select>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="sel-difficulty"><i class="fas fa-signal" aria-hidden="true"></i> Độ khó:</label>
+                    <select id="sel-difficulty" aria-label="Chọn độ khó">
+                        <option value="all">Tất cả</option>
+                        <option value="Dễ">Dễ</option>
+                        <option value="Trung bình">Trung bình</option>
+                        <option value="Khó">Khó</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="sel-count"><i class="fas fa-list-ol" aria-hidden="true"></i> Số lượng câu:</label>
+                    <select id="sel-count" aria-label="Chọn số lượng câu hỏi">
+                        <option value="20">20 câu</option>
+                        <option value="40">40 câu</option>
+                        <option value="80">Toàn bộ 80 câu</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-gamepad" aria-hidden="true"></i> Chế độ:</label>
+                <div class="mode-select" role="radiogroup" aria-label="Chọn chế độ làm bài">
+                    <label class="mode-card ripple-effect"><input type="radio" name="mode" value="study" checked> <i class="fas fa-graduation-cap"></i> Học tập</label>
+                    <label class="mode-card ripple-effect"><input type="radio" name="mode" value="exam"> <i class="fas fa-stopwatch"></i> Thi thật</label>
+                </div>
+            </div>
+            <div class="form-group exam-time hidden" id="time-group">
+                <label for="inp-time"><i class="fas fa-clock" aria-hidden="true"></i> Thời gian (phút):</label>
+                <input type="number" id="inp-time" value="30" min="5" max="120" aria-label="Nhập thời gian thi">
+            </div>
+            <div class="setup-actions">
+                <button class="btn-primary ripple-effect" onclick="app.startQuiz()"><i class="fas fa-play" aria-hidden="true"></i> Bắt đầu</button>
+                <div class="action-row">
+                    <button class="btn-secondary ripple-effect" onclick="app.loadReview('wrong')"><i class="fas fa-redo text-danger" aria-hidden="true"></i> Luyện câu sai</button>
+                    <button class="btn-secondary ripple-effect" onclick="app.loadReview('bookmark')"><i class="fas fa-star text-warning" aria-hidden="true"></i> Ôn Bookmark</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Main Workspace -->
+    <div id="workspace" class="workspace hidden">
+        <!-- Sidebar Drawer -->
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-th-large" aria-hidden="true"></i> Danh sách câu hỏi</h3>
+                <button id="btn-close-sidebar" class="icon-btn ripple-effect" aria-label="Đóng danh sách"><i class="fas fa-times" aria-hidden="true"></i></button>
+            </div>
+            <div class="sidebar-filters">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                    <input type="text" id="inp-search" placeholder="Tìm câu hỏi..." aria-label="Tìm kiếm câu hỏi">
+                </div>
+                <div class="filter-chips" role="group" aria-label="Lọc câu hỏi">
+                    <button class="chip active ripple-effect" data-filter="all">Tất cả</button>
+                    <button class="chip ripple-effect" data-filter="unattempted" aria-label="Chưa làm"><i class="far fa-circle text-light"></i></button>
+                    <button class="chip ripple-effect" data-filter="correct" aria-label="Đúng"><i class="fas fa-check text-success"></i></button>
+                    <button class="chip ripple-effect" data-filter="wrong" aria-label="Sai"><i class="fas fa-times text-danger"></i></button>
+                    <button class="chip ripple-effect" data-filter="bookmark" aria-label="Đã đánh dấu"><i class="fas fa-star text-warning"></i></button>
+                </div>
+            </div>
+            <div id="q-grid" class="q-grid" role="list" aria-label="Lưới câu hỏi"></div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="main-content">
+            <div class="top-bar">
+                <button id="btn-toggle-sidebar" class="icon-btn ripple-effect" aria-label="Mở danh sách câu hỏi" aria-expanded="false"><i class="fas fa-bars"></i></button>
+                <div class="progress-wrapper">
+                    <div class="progress-info">
+                        <span class="progress-label">Tiến trình</span>
+                        <span class="progress-stats"><span id="txt-progress">0/0</span> (<span id="txt-percent">0%</span>)</span>
+                    </div>
+                    <div class="progress-bar" aria-label="Thanh tiến trình" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="progress-fill" id="bar-progress"></div></div>
+                </div>
+                <div class="timer-badge" id="timer-box" aria-live="polite"><i class="fas fa-clock" aria-hidden="true"></i> <span id="txt-timer">00:00</span></div>
+            </div>
+
+            <!-- Skeleton Loader -->
+            <div id="skeleton-loader" class="question-container skeleton-container hidden">
+                <div class="skeleton-badge"></div>
+                <div class="skeleton-text"></div>
+                <div class="skeleton-text short"></div>
+                <div class="skeleton-option"></div>
+                <div class="skeleton-option"></div>
+                <div class="skeleton-option"></div>
+                <div class="skeleton-option"></div>
+            </div>
+
+            <div id="question-area" class="question-container fade-in">
+                <div class="q-meta">
+                    <div class="q-badges">
+                        <span class="badge badge-chapter" id="badge-chapter">Chương</span>
+                        <span class="badge badge-diff" id="badge-diff">Mức độ</span>
+                    </div>
+                    <button id="btn-bookmark" class="icon-btn ripple-effect" aria-label="Đánh dấu câu hỏi" title="Đánh dấu"><i class="far fa-star"></i></button>
+                </div>
+                <h2 id="q-text" class="q-text" tabindex="0">Nội dung câu hỏi</h2>
+                <div id="q-image" class="q-image hidden" tabindex="0" role="button" aria-label="Nhấn để phóng to hình ảnh"></div>
+                <div class="options-container" id="q-options" role="radiogroup" aria-label="Các lựa chọn đáp án"></div>
+                
+                <div id="feedback-box" class="feedback-box hidden" role="alert" aria-live="assertive"></div>
+            </div>
+
+            <!-- Mobile-first Bottom Action Bar -->
+            <nav class="bottom-action-bar" aria-label="Điều hướng câu hỏi">
+                <button class="nav-btn ripple-effect" onclick="app.nav('first')" title="Câu đầu tiên" aria-label="Câu đầu tiên"><i class="fas fa-angle-double-left"></i></button>
+                <button class="nav-btn ripple-effect btn-lg" onclick="app.nav('prev')" title="Câu trước" aria-label="Câu trước"><i class="fas fa-angle-left"></i></button>
+                
+                <!-- Nút nộp bài luôn hiển thị -->
+                <button class="nav-btn ripple-effect center-action hide-desktop" onclick="app.toggleSidebar()" title="Danh sách" aria-label="Mở danh sách"><i class="fas fa-th-large"></i></button>
+                <button class="btn-submit ripple-effect center-action" id="btn-submit" onclick="app.confirmSubmit()"><i class="fas fa-paper-plane"></i> Nộp Bài</button>
+                
+                <button class="nav-btn ripple-effect btn-lg" onclick="app.nav('next')" title="Câu tiếp theo" aria-label="Câu tiếp theo"><i class="fas fa-angle-right"></i></button>
+                <button class="nav-btn ripple-effect" onclick="app.nav('last')" title="Câu cuối cùng" aria-label="Câu cuối cùng"><i class="fas fa-angle-double-right"></i></button>
+            </nav>
+        </main>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <div class="modal-content confirm-content">
+            <h3 id="confirm-title"><i class="fas fa-exclamation-circle text-warning"></i> Xác nhận nộp bài</h3>
+            <p id="confirm-desc">Bạn có chắc chắn muốn nộp bài? Câu chưa làm sẽ bị tính là sai.</p>
+            <div class="modal-actions">
+                <button class="btn-secondary ripple-effect" onclick="app.closeModal('confirm-modal')">Tiếp tục làm</button>
+                <button class="btn-primary ripple-effect" onclick="app.submitQuiz()">Nộp bài</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Screen -->
+    <main id="result-screen" class="container hidden">
+        <section class="result-card fade-in">
+            <h1 class="result-title"><i class="fas fa-trophy text-warning"></i> Báo Cáo Kết Quả</h1>
+            <div class="rank-badge" id="res-rank">Xuất sắc</div>
+            
+            <div class="stats-dashboard">
+                <div class="stat-card score-card">
+                    <svg class="circular-chart" viewBox="0 0 36 36">
+                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="circle" id="res-circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <text x="18" y="20.35" class="percentage" id="res-score">0</text>
+                    </svg>
+                    <div class="stat-lbl">Điểm (Hệ 10)</div>
+                </div>
+                <div class="stat-metrics">
+                    <div class="metric-item"><div class="metric-icon success-bg"><i class="fas fa-check text-success"></i></div><div class="metric-info"><span class="val" id="res-correct">0</span><span class="lbl">Đúng</span></div></div>
+                    <div class="metric-item"><div class="metric-icon danger-bg"><i class="fas fa-times text-danger"></i></div><div class="metric-info"><span class="val" id="res-wrong">0</span><span class="lbl">Sai/Bỏ qua</span></div></div>
+                    <div class="metric-item"><div class="metric-icon info-bg"><i class="fas fa-stopwatch text-info"></i></div><div class="metric-info"><span class="val" id="res-time">00:00</span><span class="lbl">Thời gian</span></div></div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <h3><i class="fas fa-chart-bar"></i> Phân tích năng lực (Theo chương)</h3>
+                <div id="chapter-analysis" class="analysis-container"></div>
+            </div>
+            
+            <div class="result-actions-grid">
+                <button class="btn-primary ripple-effect" onclick="location.reload()"><i class="fas fa-home"></i> Màn hình chính</button>
+                <button class="btn-secondary ripple-effect" onclick="app.reviewFromResults('wrong')"><i class="fas fa-redo"></i> Luyện lại câu sai</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Fullscreen Image Modal -->
+    <div id="img-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Xem ảnh kích thước lớn">
+        <button class="close-modal ripple-effect icon-btn" aria-label="Đóng ảnh">&times;</button>
+        <div id="modal-img-content" class="modal-img-content"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="questions.js"></script>
+    <script src="images.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
